@@ -1,0 +1,25 @@
+services:
+  crud.db:
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Password123
+      - POSTGRES_DB=crud_db
+    volumes:
+      - cruddbdata:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    restart: on-failure
+
+  crud.db.dashboard:
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=adminpassword
+    ports:
+      - "81:80"
+    depends_on:
+      - crud.db
+
+volumes:
+  cruddbdata:
