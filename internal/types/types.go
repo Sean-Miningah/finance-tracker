@@ -9,6 +9,14 @@ type User struct {
 	CreatedAt string `json:"createdAt"`
 }
 
+type Record struct {
+	ID          int    `json:"id"`
+	Description string `json:"description"`
+	Category    string `json:"category"`
+	Amount      int    `json:"amount"`
+	CreatedAt   string `json:"createAt"`
+}
+
 type UserStore interface {
 	GetUserByEmail(email string) (*User, error)
 	GetUserByID(id int) (*User, error)
@@ -25,4 +33,13 @@ type RegisterUserPayload struct {
 type LoginUserPayload struct {
 	Email    string `json:"email" validate:"required"`
 	Password string `json:"password" validate:"required"`
+}
+
+type RecordStore interface {
+	GetUserRecords(userId string) ([]Record, error)
+	GetRecordById(id string) (Record, error)
+	GetUserRecordsByCategory(userId string, category string) ([]Record, error)
+	CreateUserRecord(userId string, record Record) error
+	UpdateRecord(recordId string, updates Record) error
+	DeleteRecord(recordId string) error
 }
