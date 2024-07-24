@@ -1,10 +1,15 @@
 package user
 
 import (
+	"errors"
 	"finance-crud-app/internal/types"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+)
+
+var (
+	CreateUserError = errors.New("cannot create user")
 )
 
 type Store struct {
@@ -16,16 +21,15 @@ func NewStore(db *sqlx.DB) *Store {
 }
 
 func (s *Store) CreateUser(user types.User) error {
-	_, err := s.db.Exec("INSERT INTO users (firstName, lastName, email, password VALUES (?, ?, ?, ?)",
-		user.FirstName, user.LastName, user.Email, user.Password)
+	_, err := s.db.Exec("INSERT INTO users (firstName, lastName, email, password) VALUES ($1, $2, $3, $4)", user.FirstName, user.LastName, user.Email, user.Password)
 	if err != nil {
-		return err
+		return CreateUserError
 	}
 	return nil
 }
 
 func (s *Store) GetUserByEmail(email string) (*types.User, error) {
-	rows, err := s.db.Queryx("SELECT * FROM users WHERE email = ?", email)
+	rows, err := s.db.Queryx("SELECT * FROM users WHERE email = $1", email)
 	if err != nil {
 		return nil, err
 	}
@@ -39,14 +43,14 @@ func (s *Store) GetUserByEmail(email string) (*types.User, error) {
 	}
 
 	if u.ID == 0 {
-		return nil, fmt.Errorf("user nto found")
+		return nil, fmt.Errorf("user not found")
 	}
 
 	return u, nil
 }
 
 func (s *Store) GetUserByID(id int) (*types.User, error) {
-	rows, err := s.db.Queryx("SELECT * FROM users WHERE id = ?", id)
+	rows, err := s.db.Queryx("SELECT * FROM users WHERE id = $", id)
 	if err != nil {
 		return nil, err
 	}
