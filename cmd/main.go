@@ -24,9 +24,8 @@ func NewServer(db *sqlx.DB, mux *mux.Router) *Server {
 }
 
 func main() {
-	// Replace the connection string with your PostgreSQL credentials
 	connStr := "postgres://postgres:Password123@localhost:5432/crud_db?sslmode=disable"
-	// Connect to the database
+
 	db, err := db.NewPGStorage(connStr)
 	if err != nil {
 		log.Fatal(err)
