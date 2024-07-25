@@ -18,9 +18,9 @@ type Record struct {
 }
 
 type UserStore interface {
-	GetUserByEmail(email string) (*User, error)
+	GetUserByEmail(email string) (User, error)
 	GetUserByID(id int) (*User, error)
-	CreateUser(User) error
+	CreateUser(User) (userId int, err error)
 }
 
 type RegisterUserPayload struct {

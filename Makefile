@@ -2,10 +2,10 @@ build:
 	@go build -0 bin cmd/main.go
 
 test:
-	@go test -v ./...
+	@go test -v -migrate=true ./...
 
 dev-run:
 	@go run cmd/main.go
 
-migrate:
-	@dbmate up
+seed-test-db:
+	@go run main.go -seed=true
