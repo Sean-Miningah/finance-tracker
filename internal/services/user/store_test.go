@@ -1,80 +1,177 @@
-package user
+package user_test
 
 import (
-	"finance-crud-app/internal/testutils"
+	"finance-crud-app/internal/db"
+	"finance-crud-app/internal/services/user"
 	"finance-crud-app/internal/types"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+)
+
+var (
+	userTestStore *user.Store
+	testDB        *sqlx.DB
 )
 
 func TestMain(m *testing.M) {
+	// database
+	ConnStr := "postgres://postgres:Password123@localhost:5432/crud_db?sslmode=disable"
+	testDB, err := db.NewPGStorage(ConnStr)
+	if err != nil {
+		log.Fatalf("could not connect %v", err)
+	}
+	defer testDB.Close()
+	userTestStore = user.NewStore(testDB)
 
 	code := m.Run()
-	clearTestUserStore()
 	os.Exit(code)
 }
 
-func TestUserStore(t *testing.T) {
+func TestCreateUser(t *testing.T) {
 	test_data := map[string]struct {
 		user   types.User
-		result error
+		result any
 	}{
 		"valid user data": {
 			user: types.User{
-				FirstName: "testfirst-1",
-				LastName:  "testlast-1",
-				Email:     "email@test.com",
+				FirstName: "testfirsjjlkjt-1",
+				LastName:  "testlastkjh-1",
+				Email:     "validuser@email.com",
 				Password:  "00000000",
 			},
 			result: nil,
 		},
 		"invalid user data": {
 			user: types.User{
-				FirstName: "testfirst-1",
-				LastName:  "testlast-1",
-				Email:     "email@test.com",
-				Password:  "00000000",
+				FirstName: "testFirstName1",
+				LastName:  "testLastName1",
+				Email:     "test1@email.com",
+				Password:  "800890",
 			},
-			result: CreateUserError,
+			result: user.CreateUserError,
 		},
 	}
 
-	test_store := NewStore(testutils.DB)
-
 	for name, tc := range test_data {
 		t.Run(name, func(t *testing.T) {
-			got := test_store.CreateUser(tc.user)
+			value, got := userTestStore.CreateUser(tc.user)
 			if got != tc.result {
-				t.Errorf("test fail expected %v got %v instead", tc.result, got)
+				t.Errorf("test fail expected %v got %v instead and value %v", tc.result, got, value)
 			}
 		})
 	}
 
-	// t.Run("successfully create user", func(t *testing.T) {
-	// 	testUser := types.User{
-	// 		FirstName: "testfirst-1",
-	// 		LastName:  "testlast-1",
-	// 		Email:     "email@test.com",
-	// 		Password:  "00000000",
-	// 	}
-
-	// 	got := test_store.CreateUser(testUser)
-	// 	if got != nil {
-	// 		t.Errorf("test fail: got %v  but wanted nil", got)
-	// 	}
-	// })
-
-	// t.Run("unsuccessfully create user", func(t *testing.T) {
-	// 	testUser := types.User{
-
-	// 	}
-	// })
+	t.Cleanup(func() {
+		err := userTestStore.DeleteUser("validuser@email.com")
+		if err != nil {
+			t.Errorf("could not delete user %v got error %v", "validuser@email.com", err)
+		}
+	})
 }
 
-func clearTestUserStore() {
-	_, err := testutils.DB.Exec("DELETE FROM users")
-	if err != nil {
-		log.Fatalf("Error clearing users test data %v", err)
+func TestGetUserByEmail(t *testing.T) {
+	test_data := map[string]struct {
+		email  string
+		result any
+	}{
+		"get user with valid email": {
+			email:  "test1@email.com",
+			result: nil,
+		},
+		"get user with invalid email": {
+			email:  "validuser@email.com",
+			result: user.RetrieveUserError,
+		},
 	}
+
+	for name, tc := range test_data {
+		got, err := userTestStore.GetUserByEmail(tc.email)
+		if err != tc.result {
+			t.Errorf("test fail expected %v instead got %v", name, got)
+		}
+	}
+}
+
+func TestGetUserById(t *testing.T) {
+	testUserId, err := userTestStore.CreateUser(types.User{
+		FirstName: "userbyid",
+		LastName:  "userbylast",
+		Email:     "unique_email",
+		Password:  "unique_password",
+	})
+	if err != nil {
+		log.Panicf("got %v when creating testuser", testUserId)
+	}
+
+	test_data := map[string]struct {
+		user_id int
+		result  any
+	}{
+		"get user with valid id": {
+			user_id: testUserId,
+			result:  nil,
+		},
+		"get user with invalid id": {
+			user_id: 0,
+			result:  user.RetrieveUserError,
+		},
+	}
+
+	for name, tc := range test_data {
+		t.Run(name, func(t *testing.T) {
+			_, got := userTestStore.GetUserByID(tc.user_id)
+			if got != tc.result {
+				t.Errorf("error retrieving user by id got %v want %v", got, tc.result)
+			}
+		})
+	}
+
+	t.Cleanup(func() {
+		err := userTestStore.DeleteUser("unique_email")
+		if err != nil {
+			t.Errorf("could not delete user %v got error %v", "unique_email", err)
+		}
+	})
+}
+
+func TestDeleteUser(t *testing.T) {
+	testUserId, err := userTestStore.CreateUser(types.User{
+		FirstName: "userbyid",
+		LastName:  "userbylast",
+		Email:     "delete_user@email.com",
+		Password:  "unique_password",
+	})
+	if err != nil {
+		log.Panicf("got %v when creating testuser", testUserId)
+	}
+
+	test_data := map[string]struct {
+		user_email string
+		result     error
+	}{
+		"valid delete action": {
+			user_email: "delete_user@email.com",
+			result:     nil,
+		},
+	}
+
+	for name, tc := range test_data {
+		t.Run(name, func(t *testing.T) {
+			err = userTestStore.DeleteUser(tc.user_email)
+			if err != tc.result {
+				t.Errorf("error deletig user got %v instead of %v", err, tc.result)
+			}
+		})
+	}
+
+	t.Cleanup(func() {
+		err := userTestStore.DeleteUser("delete_user@email.com")
+		if err != nil {
+			t.Errorf("could not delete user %v got error %v", "delete_user@email.com", err)
+		}
+	})
 }
