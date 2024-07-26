@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"log"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -83,6 +85,36 @@ func (s *RecordsStore) UpdateRecord(recordId string, update types.Record) error 
 	return nil
 }
 
-func (s *RecordsStore) DeleteRecord(recordId string) error {
+func (s *RecordsStore) CheckRecordBelongsToUser(userId string, recordId string) bool {
+	query := `
+	SELECT * FROM records
+	WHERE
+		userId = $1 AND id = $2
+	LIMIT
+		1`
+
+	var record types.Record
+	err := s.db.Get(&record, query, userId, recordId)
+	if err != nil {
+		log.Printf("error value %v", err)
+		return false
+	}
+
+	return true
+}
+
+func (s *RecordsStore) UserDeleteRecord(recordId, userId string) error {
+	ok := s.CheckRecordBelongsToUser(userId, recordId)
+	if !ok {
+		return fmt.Errorf("user cannot delete record")
+	}
+
+	query := `DELETE FROM records WHERE id = $1`
+
+	_, err := s.db.Exec(query, recordId)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
