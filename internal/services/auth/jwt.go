@@ -15,7 +15,7 @@ import (
 
 type contextKey string
 
-const UserKey contextKey = "userID"
+const UserKey string = "user_id"
 
 func JWTAuthMiddleWare(handlerFunc http.HandlerFunc, store types.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -89,11 +89,15 @@ func permissionDenied(w http.ResponseWriter) {
 	utils.WriteError(w, http.StatusForbidden, fmt.Errorf("access denied"))
 }
 
-func GetUserIDFromContext(ctx context.Context) int {
-	userID, ok := ctx.Value(UserKey).(int)
+func GetUserIDFromContext(ctx context.Context) string {
+	value, ok := ctx.Value(UserKey).(string)
 	if !ok {
-		return -1
+		return "-1"
 	}
 
-	return userID
+	if _, err := strconv.Atoi(value); err != nil {
+		return "-1"
+	}
+
+	return value
 }

@@ -70,7 +70,18 @@ func (s *Store) GetUserByID(id int) (*types.User, error) {
 }
 
 func (s *Store) DeleteUser(email string) error {
-	_, err := s.db.Exec("DELETE FROM users WHERE email = $1", email)
+
+	user, err := s.GetUserByEmail(email)
+	if err != nil {
+		return DeleteUserError
+	}
+	// delete user records first
+	_, err = s.db.Exec("DELETE FROM records WHERE userid = $1", user.ID)
+	if err != nil {
+		return DeleteUserError
+	}
+
+	_, err = s.db.Exec("DELETE FROM users WHERE email = $1", email)
 	if err != nil {
 		return DeleteUserError
 	}

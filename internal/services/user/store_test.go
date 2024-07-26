@@ -36,7 +36,7 @@ func TestCreateUser(t *testing.T) {
 		user   types.User
 		result any
 	}{
-		"valid user data": {
+		"should PASS valid user email used": {
 			user: types.User{
 				FirstName: "testfirsjjlkjt-1",
 				LastName:  "testlastkjh-1",
@@ -45,7 +45,7 @@ func TestCreateUser(t *testing.T) {
 			},
 			result: nil,
 		},
-		"invalid user data": {
+		"should FAIL invalid user email used": {
 			user: types.User{
 				FirstName: "testFirstName1",
 				LastName:  "testLastName1",
@@ -78,11 +78,11 @@ func TestGetUserByEmail(t *testing.T) {
 		email  string
 		result any
 	}{
-		"get user with valid email": {
+		"should pass valid user email address used": {
 			email:  "test1@email.com",
 			result: nil,
 		},
-		"get user with invalid email": {
+		"should fail invalid user email address used": {
 			email:  "validuser@email.com",
 			result: user.RetrieveUserError,
 		},
@@ -111,11 +111,11 @@ func TestGetUserById(t *testing.T) {
 		user_id int
 		result  any
 	}{
-		"get user with valid id": {
+		"should pass valid user id used": {
 			user_id: testUserId,
 			result:  nil,
 		},
-		"get user with invalid id": {
+		"should fail invalid user id used": {
 			user_id: 0,
 			result:  user.RetrieveUserError,
 		},
@@ -153,7 +153,7 @@ func TestDeleteUser(t *testing.T) {
 		user_email string
 		result     error
 	}{
-		"valid delete action": {
+		"should pass user email address used": {
 			user_email: "delete_user@email.com",
 			result:     nil,
 		},

@@ -11,7 +11,7 @@ import (
 
 type mockUserStore struct{}
 
-func (m *mockUserStore) UpdateUser(u types.User) error {
+func (m *mockUserStore) DeleteUser(email string) error {
 	return nil
 }
 
@@ -27,11 +27,11 @@ func (m *mockUserStore) GetUserByID(id int) (*types.User, error) {
 	return &types.User{}, nil
 }
 
-func TestUserServiceHandlers(t *testing.T) {
+func TestGetUserHandler(t *testing.T) {
 	userStore := &mockUserStore{}
 	handler := NewHandler(userStore)
 
-	t.Run("fail if user ID is not number", func(t *testing.T) {
+	t.Run("should fail to get user with user_id that is not a number", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, "/user/abc", nil)
 		if err != nil {
 			t.Fatal(err)
@@ -44,10 +44,25 @@ func TestUserServiceHandlers(t *testing.T) {
 
 		router.ServeHTTP(rr, req)
 
-		router.HandleFunc("/user/{userID}", handler.handleGetUser).Methods(http.MethodGet)
-
 		if rr.Code != http.StatusBadRequest {
 			t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
+		}
+	})
+
+	t.Run("should pass to get user with numeric id", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, "/user/23", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rr := httptest.NewRecorder()
+		router := mux.NewRouter()
+
+		router.HandleFunc("/user/{userID}", handler.handleGetUser).Methods(http.MethodGet)
+		router.ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusOK {
+			t.Errorf("expected status code %d, got %d", http.StatusBadGateway, rr.Code)
 		}
 	})
 }

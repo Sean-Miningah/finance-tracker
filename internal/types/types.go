@@ -9,18 +9,30 @@ type User struct {
 	CreatedAt string `json:"createdAt"`
 }
 
+type UserStore interface {
+	GetUserByEmail(email string) (User, error)
+	GetUserByID(id int) (*User, error)
+	CreateUser(User) (userId int, err error)
+	DeleteUser(email string) error
+}
+
 type Record struct {
 	ID          int    `json:"id"`
 	Description string `json:"description"`
 	Category    string `json:"category"`
 	Amount      int    `json:"amount"`
+	UserId      int    `json:"user_id"`
 	CreatedAt   string `json:"createAt"`
 }
 
-type UserStore interface {
-	GetUserByEmail(email string) (User, error)
-	GetUserByID(id int) (*User, error)
-	CreateUser(User) (userId int, err error)
+type RecordStore interface {
+	GetUserRecords(userId string) ([]Record, error)
+	GetRecordById(id string) (Record, error)
+	GetUserRecordsByCategory(userId string, category string) ([]Record, error)
+	CreateUserRecord(userId string, record Record) (recordId int, err error)
+	CheckRecordBelongsToUser(userId, recordId string) bool
+	UserDeleteRecord(recordId, userId string) error
+	DeleteRecord(recordId string) error
 }
 
 type RegisterUserPayload struct {
@@ -35,11 +47,8 @@ type LoginUserPayload struct {
 	Password string `json:"password" validate:"required"`
 }
 
-type RecordStore interface {
-	GetUserRecords(userId string) ([]Record, error)
-	GetRecordById(id string) (Record, error)
-	GetUserRecordsByCategory(userId string, category string) ([]Record, error)
-	CreateUserRecord(userId string, record Record) error
-	UpdateRecord(recordId string, updates Record) error
-	DeleteRecord(recordId string) error
+type PostRecordPayload struct {
+	Description string `json:"description" validate:"required"`
+	Category    string `json:"category"`
+	Amount      int    `json:"amount" validate:"required"`
 }

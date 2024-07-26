@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"log"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -23,7 +25,7 @@ func (s *RecordsStore) GetRecordById(id string) (types.Record, error) {
 	}
 
 	record := types.Record{}
-	err = s.db.Select(&record, "SELECT * FROM records where id = ?", recordId)
+	err = s.db.Get(&record, "SELECT * FROM records where id = $1 ", recordId)
 	if err != nil {
 		return types.Record{}, fmt.Errorf("error retrieving record: %v", err)
 	}
@@ -39,7 +41,7 @@ func (s *RecordsStore) GetUserRecords(userId string) ([]types.Record, error) {
 
 	records := []types.Record{}
 
-	err = s.db.Select(&records, "SELECT * FROM records WHERE userId = ?", userIdInt)
+	err = s.db.Select(&records, "SELECT * FROM records WHERE userId = $1", userIdInt)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving records: %v", err)
 	}
@@ -47,19 +49,26 @@ func (s *RecordsStore) GetUserRecords(userId string) ([]types.Record, error) {
 	return records, nil
 }
 
-func (s *RecordsStore) CreateUserRecord(userId string, record types.Record) error {
+func (s *RecordsStore) CreateUserRecord(userId string, record types.Record) (int, error) {
 	userIdInt, err := strconv.Atoi(userId)
 	if err != nil {
-		return fmt.Errorf("error converting id to int: %v", err)
+		return -1, err
 	}
 
-	_, err = s.db.Exec("INSERT INTO records (description, category, amount, userId) VALUES (?, ?, ?, ?)",
-		record.Description, record.Category, record.Amount, userIdInt)
+	query := `
+	INSERT INTO records
+	(description, category, amount, userId)
+	VALUES ($1, $2, $3, $4)
+	returning id`
+
+	var recordId int
+	err = s.db.QueryRow(query,
+		record.Description, record.Category, record.Amount, userIdInt).Scan(&recordId)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
-	return nil
+	return recordId, nil
 }
 
 func (s *RecordsStore) GetUserRecordByCategory(userId string, category string) ([]types.Record, error) {
@@ -83,6 +92,45 @@ func (s *RecordsStore) UpdateRecord(recordId string, update types.Record) error 
 	return nil
 }
 
+func (s *RecordsStore) CheckRecordBelongsToUser(userId string, recordId string) bool {
+	query := `
+	SELECT * FROM records
+	WHERE
+		userId = $1 AND id = $2
+	LIMIT
+		1`
+
+	var record types.Record
+	err := s.db.Get(&record, query, userId, recordId)
+	if err != nil {
+		log.Printf("error value %v", err)
+		return false
+	}
+
+	return true
+}
+
+func (s *RecordsStore) UserDeleteRecord(recordId, userId string) error {
+	ok := s.CheckRecordBelongsToUser(userId, recordId)
+	if !ok {
+		return fmt.Errorf("user cannot delete record")
+	}
+
+	err := s.DeleteRecord(recordId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *RecordsStore) DeleteRecord(recordId string) error {
+	query := `DELETE FROM records WHERE id = $1`
+
+	_, err := s.db.Exec(query, recordId)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
