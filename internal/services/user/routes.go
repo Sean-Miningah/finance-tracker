@@ -55,6 +55,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.CreateJWT(u.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error %v", err))
+		return
 	}
 
 	utils.WriteJSON(w, http.StatusAccepted, map[string]string{"token": token})
@@ -70,11 +71,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if err := utils.Validate.Struct(user); err != nil {
 		errors := err.(validator.ValidationErrors)
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
-	}
-
-	_, err := h.store.GetUserByEmail(user.Email)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("email already exist"))
+		return
 	}
 
 	hashedPassword, err := auth.HashPassword(user.Password)

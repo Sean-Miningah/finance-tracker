@@ -18,6 +18,22 @@ func NewStore(db *sqlx.DB) *RecordsStore {
 	return &RecordsStore{db: db}
 }
 
+func (s *RecordsStore) GetUserRecords(userId string) ([]types.Record, error) {
+	userIdInt, err := strconv.Atoi(userId)
+	if err != nil {
+		return nil, fmt.Errorf("error converting id to int: %v", err)
+	}
+
+	records := []types.Record{}
+
+	err = s.db.Select(&records, "SELECT * FROM records WHERE userId = $1", userIdInt)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving records: %v", err)
+	}
+
+	return records, nil
+}
+
 func (s *RecordsStore) GetRecordById(id string) (types.Record, error) {
 	recordId, err := strconv.Atoi(id)
 	if err != nil {
@@ -33,7 +49,7 @@ func (s *RecordsStore) GetRecordById(id string) (types.Record, error) {
 	return record, nil
 }
 
-func (s *RecordsStore) GetUserRecords(userId string) ([]types.Record, error) {
+func (s *RecordsStore) GetUserRecordsByCategory(userId string, category string) ([]types.Record, error) {
 	userIdInt, err := strconv.Atoi(userId)
 	if err != nil {
 		return nil, fmt.Errorf("error converting id to int: %v", err)
@@ -41,7 +57,8 @@ func (s *RecordsStore) GetUserRecords(userId string) ([]types.Record, error) {
 
 	records := []types.Record{}
 
-	err = s.db.Select(&records, "SELECT * FROM records WHERE userId = $1", userIdInt)
+	query := `SELECT * FROM records WHERE userId = ? AND category = ? ORDER BY createdAt`
+	err = s.db.Select(&records, query, userIdInt, category)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving records: %v", err)
 	}
@@ -69,27 +86,6 @@ func (s *RecordsStore) CreateUserRecord(userId string, record types.Record) (int
 	}
 
 	return recordId, nil
-}
-
-func (s *RecordsStore) GetUserRecordByCategory(userId string, category string) ([]types.Record, error) {
-	userIdInt, err := strconv.Atoi(userId)
-	if err != nil {
-		return nil, fmt.Errorf("error converting id to int: %v", err)
-	}
-
-	records := []types.Record{}
-
-	query := `SELECT * FROM records WHERE userId = ? AND category = ? ORDER BY createdAt`
-	err = s.db.Select(&records, query, userIdInt, category)
-	if err != nil {
-		return nil, fmt.Errorf("error retrieving records: %v", err)
-	}
-
-	return records, nil
-}
-
-func (s *RecordsStore) UpdateRecord(recordId string, update types.Record) error {
-	return nil
 }
 
 func (s *RecordsStore) CheckRecordBelongsToUser(userId string, recordId string) bool {

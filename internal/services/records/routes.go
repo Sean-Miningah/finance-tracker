@@ -5,6 +5,7 @@ import (
 	"finance-crud-app/internal/types"
 	"finance-crud-app/internal/utils"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -62,6 +63,8 @@ func (h *Handler) handlePostRecord(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userId := auth.GetUserIDFromContext(r.Context())
+
+	log.Printf("userid %v", userId)
 
 	created_record_id, err := h.recordStore.CreateUserRecord(userId, new_record)
 	if err != nil {
