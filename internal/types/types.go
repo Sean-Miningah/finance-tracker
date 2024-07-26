@@ -21,6 +21,7 @@ type Record struct {
 	Description string `json:"description"`
 	Category    string `json:"category"`
 	Amount      int    `json:"amount"`
+	UserId      int    `json:"user_id"`
 	CreatedAt   string `json:"createAt"`
 }
 
@@ -29,8 +30,9 @@ type RecordStore interface {
 	GetRecordById(id string) (Record, error)
 	GetUserRecordsByCategory(userId string, category string) ([]Record, error)
 	CreateUserRecord(userId string, record Record) (recordId int, err error)
-	UserDeleteRecord(recordId, userId string) error
 	CheckRecordBelongsToUser(userId, recordId string) bool
+	UserDeleteRecord(recordId, userId string) error
+	DeleteRecord(recordId string) error
 }
 
 type RegisterUserPayload struct {

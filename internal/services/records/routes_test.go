@@ -129,6 +129,10 @@ func (m *mockRecordStore) UserDeleteRecord(recordId, userId string) error {
 	return nil
 }
 
+func (m *mockRecordStore) DeleteRecord(recordId string) error {
+	return nil
+}
+
 func (m *mockRecordStore) CheckRecordBelongsToUser(userId, recordId string) bool {
 	return true
 }
