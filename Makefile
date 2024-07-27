@@ -2,7 +2,7 @@ build:
 	@go build -0 bin cmd/main.go
 
 test:
-	@go test -v -migrate=true ./...
+	@go test ./...
 
 dev-run:
 	@go run cmd/main.go
