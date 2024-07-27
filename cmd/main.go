@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 
 	"finance-crud-app/cmd/api"
@@ -25,8 +24,6 @@ func NewServer(db *sqlx.DB, mux *mux.Router) *Server {
 }
 
 func main() {
-	seedDB := flag.Bool("seed", false, "seed database with default data")
-	flag.Parse()
 
 	connStr := "postgres://postgres:Password123@localhost:5432/crud_db?sslmode=disable"
 
@@ -35,11 +32,6 @@ func main() {
 		log.Fatal(err)
 	}
 	defer dbconn.Close()
-
-	if *seedDB {
-		db.SeedTestDB(dbconn)
-		log.Printf("seed pass")
-	}
 
 	server := api.NewAPIServer(":8085", dbconn)
 	if err := server.Run(); err != nil {
