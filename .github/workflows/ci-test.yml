@@ -33,10 +33,8 @@ jobs:
 
       - name: Install dbmate for golang migrations
         run: |
-          curl -L -O https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
-          ls -l dbmate-linux-amd64
-          file dbmate-linux-amd64
-          sudo mv dbmate-linux-amd64 /usr/bin/dbmate
+          sudo curl -fsSL -o /usr/local/bin/dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
+          sudo chmod +x /usr/local/bin/dbmate
           which dbmate
 
       - name: MakeMigrations
