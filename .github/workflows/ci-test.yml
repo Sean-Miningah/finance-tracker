@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  POSTREG_USER: postgres
+  POSTGRES_USER: postgres
   POSTGRES_PASSWORD: Password123
   POSTGRES_DB: crud_db
 jobs:
