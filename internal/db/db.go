@@ -36,7 +36,7 @@ type Data struct {
 }
 
 func SeedTestDB(db *sqlx.DB) {
-	seed_data, err := readJsonFile("../test_data/test_seed_data.json")
+	seed_data, err := readJsonFile("test_data/test_seed_data.json")
 	if err != nil {
 		log.Fatalf("error retrieving data from file %v", seed_data)
 	}
