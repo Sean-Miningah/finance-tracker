@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  POSTREG_USER: postgres
+  POSTGRES_PASSWORD: Password123
+  POSTGRES_DB: crud_db
 jobs:
   build:
     name: tests
@@ -14,9 +18,9 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: Password123
-          POSTGRES_DB: crud_db
+          POSTGRES_USER: $POSTGRES
+          POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+          POSTGRES_DB: $POSTGRES_DB
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -37,8 +41,12 @@ jobs:
           sudo chmod +x /usr/local/bin/dbmate
           which dbmate
 
-      - name: MakeMigrations
-        run: make migrations
+      - name: Construct DB URL
+        id: construct_url
+        run: echo "DB_URL=postgres://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5432/${{ env.POSTGRES_DB }}?sslmode=disable" >> $GITHUB_ENV
+
+      - name: Make Migrations
+        run: make migrations URL=${{ env.DB_URL }}
 
       - name: Test
         run: make test
