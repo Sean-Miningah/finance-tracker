@@ -1,6 +1,7 @@
 package api
 
 import (
+	"finance-crud-app/internal/services/records"
 	"finance-crud-app/internal/services/user"
 	"log"
 	"net/http"
@@ -28,6 +29,10 @@ func (s *APIServer) Run() error {
 	userStore := user.NewStore(s.db)
 	userHandler := user.NewHandler(userStore)
 	userHandler.RegisterRoutes(subrouter)
+
+	recordsStore := records.NewStore(s.db)
+	recordsHandler := records.NewHandler(recordsStore, userStore)
+	recordsHandler.RegisterRoutes(subrouter)
 
 	log.Println("Listening on", s.addr)
 

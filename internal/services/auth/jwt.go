@@ -44,7 +44,7 @@ func JWTAuthMiddleWare(handlerFunc http.HandlerFunc, store types.UserStore) http
 			return
 		}
 
-		u, err := store.GetUserByID(userID)
+		_, err = store.GetUserByID(userID)
 		if err != nil {
 			log.Printf("failed to get user by id")
 			permissionDenied(w)
@@ -52,7 +52,8 @@ func JWTAuthMiddleWare(handlerFunc http.HandlerFunc, store types.UserStore) http
 		}
 
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, UserKey, u.ID)
+
+		ctx = context.WithValue(ctx, UserKey, strconv.Itoa(userID))
 		r = r.WithContext(ctx)
 
 		handlerFunc(w, r)
@@ -60,15 +61,16 @@ func JWTAuthMiddleWare(handlerFunc http.HandlerFunc, store types.UserStore) http
 }
 
 func CreateJWT(userID int) (string, error) {
-	expiration := time.Second * time.Duration(5)
+	expiration := time.Minute * time.Duration(45)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID":    strconv.Itoa(int(userID)),
 		"expiresAt": time.Now().Add(expiration).Unix(),
 	})
 
-	tokenString, err := token.SignedString("secret")
+	tokenString, err := token.SignedString([]byte("secret"))
 	if err != nil {
+		fmt.Printf("signing error %v", tokenString)
 		return "", err
 	}
 
@@ -90,8 +92,12 @@ func permissionDenied(w http.ResponseWriter) {
 }
 
 func GetUserIDFromContext(ctx context.Context) string {
+	valuee := ctx.Value("user_id")
+
 	value, ok := ctx.Value(UserKey).(string)
+
 	if !ok {
+		log.Printf("user key from the get context function %v", valuee)
 		return "-1"
 	}
 
