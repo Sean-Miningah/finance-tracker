@@ -44,7 +44,9 @@ jobs:
 
       - name: Construct DB URL
         id: construct_url
-        run: echo "DB_URL=postgres://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@postgres:5432/${{ env.POSTGRES_DB }}?sslmode=disable" >> $GITHUB_ENV
+        run: echo "DB_URL=postgres://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5432/${{ env.POSTGRES_DB }}?sslmode=disable" >> $GITHUB_ENV
+
+      - run: env
 
       - name: Make Migrations
         run: make migrations URL=${{ env.DB_URL }}
