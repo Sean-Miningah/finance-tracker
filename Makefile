@@ -7,5 +7,6 @@ test:
 dev-run:
 	@go run cmd/main.go
 
-seed-test-db:
-	@go run main.go -seed=true
+
+migrations:
+	@dbmate up
