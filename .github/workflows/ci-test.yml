@@ -34,6 +34,8 @@ jobs:
       - name: Install dbmate for golang migrations
         run: |
           curl -L -O https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
+          ls -l dbmate-linux-amd64
+          file dbmate-linux-amd64
           sudo mv dbmate-linux-amd64 /usr/bin/dbmate
           which dbmate
 
